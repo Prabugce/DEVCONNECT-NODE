@@ -1,36 +1,20 @@
-const express = require("express");
+const express = require('express');
+const { userAuth, adminAuth } = require('./middlewares/index');
 const app = express();
-app.listen(7777,()=>{
-    console.log("Server started now this listen 7777 port");
+app.listen(7777, () => {
+  console.log('Server started now this listen 7777 port');
 });
 
+app.use('/user', userAuth);
 
-app.get("/user",(req,res)=>{
-    res.send({firstname:"MANI",Role:"Frontend Developer"})
+app.get('/user/fetch', (req, res, next) => {
+  res.send('User fetched successfully');
 });
 
-
-app.post("/user",(req,res)=>{
-    res.send({firstname:"PRABU",Role:"MERN Stack Developer"})
+app.get('/user/add', (req, res, next) => {
+  res.send('User added successfully');
 });
 
-
-app.use("/ReqHandelers",(req,res,next)=>{
-
-    console.log("RH1")
-    next();
-},(req,res,next)=>{
-    next();
-    console.log("RH2")
-},(req,res,next)=>{
-
-    console.log("RH3")
-  //  res.send("Helooooooo")
-    next();
-}
-)
-
-app.use("/",(req,res)=>{
-
-    res.send("/ reposne");
-})
+app.get('/admin', adminAuth, (req, res, next) => {
+  res.send('Admin route accessed successfully');
+});
