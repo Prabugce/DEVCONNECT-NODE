@@ -15,6 +15,21 @@ app.post("/user",(req,res)=>{
 });
 
 
+app.use("/ReqHandelers",(req,res,next)=>{
+
+    console.log("RH1")
+    next();
+},(req,res,next)=>{
+    next();
+    console.log("RH2")
+},(req,res,next)=>{
+
+    console.log("RH3")
+  //  res.send("Helooooooo")
+    next();
+}
+)
+
 app.use("/",(req,res)=>{
 
     res.send("/ reposne");
