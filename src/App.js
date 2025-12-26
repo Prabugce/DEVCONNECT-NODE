@@ -4,16 +4,18 @@ app.listen(7777,()=>{
     console.log("Server started now this listen 7777 port");
 });
 
-// app.use((req,res)=>{
 
-//     res.send("hello from the server 1");
-// })
+app.get("/user",(req,res)=>{
+    res.send({firstname:"MANI",Role:"Frontend Developer"})
+});
 
-app.use("/hello",(req,res)=>{
 
-    res.send("Hello path response");
-})
+app.post("/user",(req,res)=>{
+    res.send({firstname:"PRABU",Role:"MERN Stack Developer"})
+});
 
-app.use("/test",(req,res)=>{
-    res.send("test path response");
+
+app.use("/",(req,res)=>{
+
+    res.send("/ reposne");
 })
