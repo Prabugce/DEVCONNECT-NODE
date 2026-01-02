@@ -5,6 +5,8 @@ const bcrypt = require('bcrypt');
 
 const { userAuth, adminAuth } = require('./middlewares/index');
 const app = express();
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 
 connectDB()
   .then(() => {
@@ -18,6 +20,7 @@ connectDB()
   });
 
 app.use(express.json());
+app.use(cookieParser());
 
 //create user API
 app.post('/signup', async (req, res, next) => {
@@ -38,25 +41,50 @@ app.post('/signup', async (req, res, next) => {
   }
 });
 
-//get single user API
+//Login API
 app.post('/user', async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await Userdata.findOne({ email: email });
+
+    if (user) {
+      // const match = await bcrypt.compare(password, user.password);
+
+      const match = await user.passwordVerify(password);
+
+      if (!match) return res.status(401).send('Invalid credentials');
+      const token = jwt.sign({ userId: user._id }, 'secretkey', {
+        expiresIn: '1m',
+      });
+
+      res.cookie('userToken', token, { httpOnly: true, sameSite: 'lax' });
+      return res.status(200).send(user);
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    res.status(400).send('ERROR:' + error.message);
+  }
+});
+
+//get multiple user API
+app.get('/user', userAuth, async (req, res) => {
+  try {
+    console.log('Authenticated user:', req.user);
+    const user = await Userdata.find({});
     if (user) {
       res.json(user);
     } else {
       res.status(404).send('User not found');
     }
   } catch (error) {
-    res.status(500).send('Error fetching single user');
+    res.status(500).send('Error fetching multiple user' + error.message);
   }
 });
 
 //delete user API
 app.delete('/user', async (req, res) => {
   const { id } = req.body;
-  console.log(id);
   try {
     const user = await Userdata.findByIdAndDelete(id);
     if (user) {
@@ -66,20 +94,6 @@ app.delete('/user', async (req, res) => {
     }
   } catch (error) {
     res.status(500).send('Error deleting user by ID');
-  }
-});
-
-//get multiple user API
-app.get('/user', async (req, res) => {
-  try {
-    const user = await Userdata.find({});
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    res.status(500).send('Error fetching Multiple user');
   }
 });
 
