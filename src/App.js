@@ -1,6 +1,7 @@
 const express = require('express');
 const { connectDB } = require('./config/database');
 const Userdata = require('./modal/userSchema');
+const bcrypt = require('bcrypt');
 
 const { userAuth, adminAuth } = require('./middlewares/index');
 const app = express();
@@ -20,14 +21,20 @@ app.use(express.json());
 
 //create user API
 app.post('/signup', async (req, res, next) => {
-  const clientObject = req.body;
-  console.log(clientObject);
+  const { firstName, lastName, email, password } = req.body;
+
+  const passwordHash = await bcrypt.hash(password, 10);
   try {
-    const newUser = new Userdata(clientObject);
+    const newUser = new Userdata({
+      firstName,
+      lastName,
+      email,
+      password: passwordHash,
+    });
     await newUser.save();
     res.send('User signed up successfully');
   } catch (error) {
-    res.status(500).send('Error signing up user');
+    res.status(500).send(error.message);
   }
 });
 
@@ -95,7 +102,13 @@ app.post('/findById', async (req, res) => {
 app.patch('/user', async (req, res) => {
   const { id } = req.body;
   try {
-    const user = await Userdata.findByIdAndUpdate(id, req.body);
+    //const user = await Userdata.findByIdAndUpdate(id, req.body);
+    const user = await Userdata.findByIdAndUpdate(
+      id,
+      { $set: req.body, $currentDate: { updatedAt: true } },
+      { new: true, runValidators: true }
+    );
+
     if (user) {
       res.json('User updated successfully');
     } else {
